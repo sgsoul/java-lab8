@@ -146,7 +146,6 @@ public class Client extends Thread implements SenderReceiver {
         try {
             socket.receive(receivePacket);
         } catch (SocketTimeoutException e) {
-            e.printStackTrace();
             for (int attempts = MAX_ATTEMPTS; attempts > 0; attempts--) {
                 try {
                     socket.receive(receivePacket);

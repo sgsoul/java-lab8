@@ -2,6 +2,7 @@ package controllers;
 
 import common.data.*;
 import common.exceptions.InvalidDataException;
+import common.exceptions.InvalidEnumException;
 import common.exceptions.InvalidNumberException;
 import controllers.tools.ObservableResourceFactory;
 import javafx.collections.FXCollections;
@@ -158,8 +159,10 @@ public class AskWindowController {
         return minutesOfWaiting;
     }
 
-    public WeaponType readWeaponType() {
-        return weaponTypeBox.getSelectionModel().getSelectedItem();
+    public WeaponType readWeaponType() throws InvalidEnumException {
+        WeaponType weaponType = weaponTypeBox.getSelectionModel().getSelectedItem();
+        if(weaponType==null) throw new InvalidEnumException("[WeaponTypeEmptyException]");
+        return weaponType;
     }
 
     public HumanBeing readHuman() throws InvalidDataException {

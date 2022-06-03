@@ -120,22 +120,19 @@ public class HumanDBManager extends HumanCollectionManager {
 
     @Override
     public void add(HumanBeing human) {
-
         dbManager.setCommitMode();
         dbManager.setSavepoint();
         try (PreparedStatement statement = dbManager.getPreparedStatement(INSERT_HUMANS_QUERY, true)) {
             setHuman(statement, human);
-            if (statement.executeUpdate() == 0)
-                throw new DataBaseException();
+            if (statement.executeUpdate() == 0) throw new DatabaseException();
             ResultSet resultSet = statement.getGeneratedKeys();
 
-            if (!resultSet.next()) throw new DataBaseException();
-            human.setId(resultSet.getInt("id"));
+            if (!resultSet.next()) throw new DatabaseException();
+            human.setId(resultSet.getInt(resultSet.findColumn("id")));
 
             dbManager.commit();
-        } catch (SQLException | DataBaseException e) {
+        } catch (SQLException | DatabaseException e) {
             dbManager.rollback();
-            Log.logger.error(e);
             throw new CannotAddException();
         } finally {
             dbManager.setNormalMode();
@@ -147,11 +144,11 @@ public class HumanDBManager extends HumanCollectionManager {
     @Override
     public void removeByID(Integer id) {
         //language=SQL
-        String query = "DELETE FROM humans WHERE id = ?";
+        String query = "DELETE FROM HUMANS WHERE id = ?;";
         try {
-            PreparedStatement preparedStatement = dbManager.getPreparedStatement(query);
-            preparedStatement.setInt(1, id);
-            preparedStatement.execute();
+            PreparedStatement statement = dbManager.getPreparedStatement(query);
+            statement.setInt(1, id);
+            statement.execute();
         } catch (SQLException e) {
             throw new CannotRemoveException(id);
         }

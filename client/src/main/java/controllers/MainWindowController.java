@@ -296,7 +296,7 @@ public class MainWindowController {
 
     @FXML
     public void refreshButtonOnAction() {
-        processAction(new CommandMsg("show"));
+        humanTable.setItems(client.getHumanManager().getCollection());
     }
 
 
@@ -313,9 +313,9 @@ public class MainWindowController {
             try {
                 processAction(new CommandMsg("update").setArgument(Integer.toString(human.getId())).setHuman(askWindowController.readHuman()));
             } catch (InvalidDataException e) {
-                e.printStackTrace();
             }
         }
+        refreshButtonOnAction();
     }
 
     /**
@@ -326,7 +326,7 @@ public class MainWindowController {
     private void removeButtonOnAction() {
         HumanBeing human = humanTable.getSelectionModel().getSelectedItem();
         if (human != null) processAction(new CommandMsg("remove_by_id").setArgument(Integer.toString(human.getId())));
-        humanTable.refresh();
+        refreshButtonOnAction();
     }
 
 
@@ -337,14 +337,8 @@ public class MainWindowController {
     @FXML
     private void clearButtonOnAction() {
         client.getCommandManager().runCommand(new CommandMsg("clear"));
-        setClient(client);
-        humanTable.refresh();
-    }
-
-    @FXML
-    private void resetButtonOnAction() {
-        setClient(client);
-        humanTable.refresh();
+        refreshTable();
+        refreshButtonOnAction();
     }
 
     /**
@@ -358,6 +352,8 @@ public class MainWindowController {
         } catch (InvalidDataException ignored) {
 
         }
+        refreshTable();
+        refreshButtonOnAction();
     }
 
     @FXML
@@ -460,6 +456,7 @@ public class MainWindowController {
             throw new InvalidDataException("[IdFormatException]");
         }
     }
+
     /**
      * Request action.
      */
