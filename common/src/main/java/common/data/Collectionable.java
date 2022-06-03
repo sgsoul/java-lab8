@@ -1,5 +1,9 @@
 package common.data;
 
+/**
+ * Интерфейс для объекта. =)
+ */
+
 public interface Collectionable extends Comparable<Collectionable>, Validateable {
 
     int getId();

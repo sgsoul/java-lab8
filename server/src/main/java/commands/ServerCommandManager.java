@@ -1,9 +1,8 @@
 package commands;
 
-
 import auth.UserManager;
-import common.auth.User;
 import common.collection.HumanManager;
+import common.auth.User;
 import common.commands.Command;
 import common.commands.CommandManager;
 import common.commands.CommandType;
@@ -17,10 +16,9 @@ import common.exceptions.ConnectionException;
 import log.Log;
 import server.Server;
 
-
 public class ServerCommandManager extends CommandManager {
     private final Server server;
-    //private CollectionManager<HumanBeing> collectionManager;
+
     private final UserManager userManager;
 
     public ServerCommandManager(Server serv) {
@@ -40,8 +38,6 @@ public class ServerCommandManager extends CommandManager {
         addCommand(new RemoveFirstCommand(collectionManager));
         addCommand(new ShowCommand(collectionManager));
         addCommand(new FilterStartsWithNameCommand(collectionManager));
-        addCommand(new PrintAverageOfMinutesOfWaiting(collectionManager));
-        addCommand(new PrintUniqueImpactSpeedCommand(collectionManager));
 
         addCommand(new LoginCommand(userManager));
         addCommand(new RegisterCommand(userManager));
@@ -60,6 +56,7 @@ public class ServerCommandManager extends CommandManager {
         boolean isGeneratedByServer = (msg.getStatus() != Request.Status.RECEIVED_BY_SERVER);
         try {
             Command cmd = getCommand(msg);
+
             if (cmd.getType() != CommandType.AUTH && cmd.getType() != CommandType.SPECIAL) {
                 if (isGeneratedByServer) {
                     user = server.getHostUser();
@@ -68,31 +65,36 @@ public class ServerCommandManager extends CommandManager {
                 if (user == null) throw new AuthException();
                 if (!userManager.isValid(user)) throw new AuthException();
 
+
                 HumanBeing human = msg.getHuman();
                 if (human != null) human.setUser(user);
             }
+
+
             res = (AnswerMsg) super.runCommand(msg);
         } catch (ConnectionException | CommandException e) {
             res.error(e.getMessage());
         }
         String message = "";
 
+
         if (user != null) message += "[" + user.getLogin() + "] ";
         if (cmdName != null) message += "[" + cmdName + "] ";
+
 
         if (res.getMessage().contains("\n")) message += "\n";
         switch (res.getStatus()) {
             case EXIT:
-                Log.logger.fatal(message + "Выключение...");
-
+                Log.logger.fatal(message + "shutting down...");
                 server.close();
                 break;
             case ERROR:
                 Log.logger.error(message + res.getMessage());
                 break;
             case AUTH_SUCCESS:
-
                 if (isGeneratedByServer) server.setHostUser(user);
+                Log.logger.info(message + res.getMessage());
+                break;
             default:
                 Log.logger.info(message + res.getMessage());
                 break;

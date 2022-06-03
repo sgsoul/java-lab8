@@ -10,6 +10,7 @@ import common.data.Car;
 import common.data.HumanBeing;
 import common.data.WeaponType;
 import common.exceptions.InvalidDataException;
+import common.exceptions.InvalidNumberException;
 import common.utils.DateConverter;
 import controllers.tools.MapUtils;
 import controllers.tools.ObservableResourceFactory;
@@ -78,8 +79,6 @@ public class MainWindowController {
     @FXML
     private TableColumn<HumanBeing, Car> carColumn;
     @FXML
-    private TableColumn<HumanBeing, Car> carCoolCheckColumn;
-    @FXML
     private AnchorPane canvasPane;
     @FXML
     private Tab tableTab;
@@ -115,6 +114,8 @@ public class MainWindowController {
     private Button filterStartsWithNameButton;
     @FXML
     private Button filterStartsWithSoundtrackButton;
+    @FXML
+    private Button filterIdButton;
 
     private App app;
     private Stage askStage;
@@ -186,8 +187,6 @@ public class MainWindowController {
                 new ReadOnlyObjectWrapper<>(cellData.getValue().getWeaponType()));
         carColumn.setCellValueFactory(cellData ->
                 new ReadOnlyObjectWrapper<>(cellData.getValue().getCar()));
-        //carCoolCheckColumn.setCellValueFactory(cellData ->
-        //      new ReadOnlyObjectWrapper<>(cellData.getValue().getCar()));
 
         creationDateColumn.setCellFactory(column -> new TableCell<>() {
             @Override
@@ -282,6 +281,7 @@ public class MainWindowController {
         refreshButton.textProperty().bind(resourceFactory.getStringBinding("RefreshButton"));
         filterStartsWithNameButton.textProperty().bind(resourceFactory.getStringBinding("FilterStartsWithNameButton"));
         filterStartsWithSoundtrackButton.textProperty().bind(resourceFactory.getStringBinding("FilterStartsWithSoundtrackButton"));
+        filterIdButton.textProperty().bind(resourceFactory.getStringBinding("FilterIdButton"));
 
         addButtonTooltip.textProperty().bind(resourceFactory.getStringBinding("AddButtonTooltip"));
         updateButtonTooltip.textProperty().bind(resourceFactory.getStringBinding("UpdateButtonTooltip"));
@@ -326,6 +326,7 @@ public class MainWindowController {
     private void removeButtonOnAction() {
         HumanBeing human = humanTable.getSelectionModel().getSelectedItem();
         if (human != null) processAction(new CommandMsg("remove_by_id").setArgument(Integer.toString(human.getId())));
+        humanTable.refresh();
     }
 
 
@@ -336,12 +337,14 @@ public class MainWindowController {
     @FXML
     private void clearButtonOnAction() {
         client.getCommandManager().runCommand(new CommandMsg("clear"));
+        setClient(client);
         humanTable.refresh();
     }
 
     @FXML
     private void resetButtonOnAction() {
-
+        setClient(client);
+        humanTable.refresh();
     }
 
     /**
@@ -423,6 +426,40 @@ public class MainWindowController {
         stage.showAndWait();
     }
 
+    @FXML
+    private void filterIdButtonOnAction() throws InvalidDataException {
+        try {
+            Label startsWithLabel = new Label();
+            Stage stage = new Stage();
+            Label idLabel = new Label();
+            TextField textField = new TextField();
+            Button button = new Button();
+            button.textProperty().bind(resourceFactory.getStringBinding("EnterButton"));
+            button.setOnAction((e) -> {
+                String arg = textField.getText();
+                if (arg != null && !arg.equals("")) {
+                    processAction(new CommandMsg("filter_id").setArgument(arg));
+                    stage.close();
+                }
+
+            });
+
+            idLabel.textProperty().bind(resourceFactory.getStringBinding("IdColumn"));
+            button.setAlignment(Pos.CENTER);
+
+            HBox hBox = new HBox(idLabel, textField, button);
+            hBox.setAlignment(Pos.CENTER);
+            hBox.setSpacing(10);
+            Scene scene = new Scene(hBox);
+            stage.setScene(scene);
+            stage.setWidth(400);
+            stage.setHeight(100);
+            stage.setResizable(false);
+            stage.showAndWait();
+        } catch (NumberFormatException e) {
+            throw new InvalidDataException("[IdFormatException]");
+        }
+    }
     /**
      * Request action.
      */

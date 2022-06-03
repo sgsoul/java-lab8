@@ -1,20 +1,19 @@
 package commands;
 
 import client.Client;
-import common.commands.CommandManager;
-import common.connection.*;
-import common.exceptions.ConnectionException;
-import common.exceptions.FileException;
-import common.exceptions.InvalidDataException;
-import common.io.FileInputManager;
 
-import static common.io.ConsoleOutputter.print;
+import static common.io.ConsoleOutputter.*;
+
+import common.exceptions.*;
+
+import common.commands.*;
+import common.connection.*;
+import common.io.FileInputManager;
 
 
 /**
- * Менеджер команд для клиента.
+ * command manager for client
  */
-
 public class ClientCommandManager extends CommandManager {
     private final Client client;
 
@@ -22,10 +21,9 @@ public class ClientCommandManager extends CommandManager {
         client = c;
         addCommand(new ExecuteScriptCommand(this));
         addCommand(new ExitCommand());
-        addCommand(new HelpCommand());
-        addCommand(new PrintUniqueImpactSpeedCommand(client.getHumanManager()));
-        addCommand(new FilterStartsWithSoundtrackCommand(client.getHumanManager()));
         addCommand(new FilterStartsWithNameCommand(client.getHumanManager()));
+        addCommand(new FilterStartsWithSoundtrackCommand((client.getHumanManager())));
+        addCommand(new FilterIDCommand(client.getHumanManager()));
     }
 
     public Client getClient() {
@@ -33,14 +31,16 @@ public class ClientCommandManager extends CommandManager {
     }
 
     @Override
+
     public AnswerMsg runCommandUnsafe(Request msg) throws FileException, InvalidDataException, ConnectionException {
         AnswerMsg res = new AnswerMsg();
         if (hasCommand(msg)) {
             res = (AnswerMsg) super.runCommandUnsafe(msg);
             if (res.getStatus() == Response.Status.EXIT) {
-                res.info("Отключение...");
+                res.info("shutting down...");
             }
         } else {
+            //lock.lock();
             if (client.getUser() != null && msg.getUser() == null) msg.setUser(client.getUser());
             else client.setAttemptUser(msg.getUser());
             try {
@@ -95,4 +95,5 @@ public class ClientCommandManager extends CommandManager {
         }
         return answerMsg;
     }
+
 }

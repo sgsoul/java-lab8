@@ -9,16 +9,17 @@ import server.Server;
 import java.util.Properties;
 
 /**
- * main class for launching server with arguments
+ * основной класс для запуска сервера с аргументами
  */
+
 public class Main {
     public static void main(String[] args) {
         int port;
         String strPort = "5432";
         String user = "postgres";
-        String password = "qwerty";
+        String password = "arina";
         String url = "jdbc:postgresql://localhost:5432/postgres";
-        args = new String[]{"5432", "localhost", "postgres", "qwerty"};
+        args = new String[]{"5432", "postgres", "postgres", "arina"};
         try {
             if (args.length == 4) {
                 strPort = args[0];
@@ -27,7 +28,7 @@ public class Main {
 
             }
             if (args.length == 1) strPort = args[0];
-            if (args.length == 0) Log.logger.info("no port passed by argument, hosted on " + strPort);
+            if (args.length == 0) Log.logger.info("нет порта, переданного аргументом, размещенного на " + strPort);
             try {
                 port = Integer.parseInt(strPort);
             } catch (NumberFormatException e) {
@@ -43,7 +44,7 @@ public class Main {
             server.consoleMode();
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (server.isRunning()) server.close();
-            }, "shutdown thread"));
+            }, "поток завершения работы"));
 
         } catch (ConnectionException | DatabaseException e) {
             Log.logger.error(e.getMessage());

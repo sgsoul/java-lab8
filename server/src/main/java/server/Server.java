@@ -1,9 +1,9 @@
 package server;
 
 import auth.UserManager;
+import common.collection.HumanManager;
 import commands.ServerCommandManager;
 import common.auth.User;
-import common.collection.HumanManager;
 import common.commands.CommandType;
 import common.connection.*;
 import common.data.HumanBeing;
@@ -11,7 +11,6 @@ import common.exceptions.*;
 import database.DBManager;
 import database.HumanDBManager;
 import database.UserDBManager;
-import exceptions.DataBaseException;
 import exceptions.ServerOnlyCommandException;
 import log.Log;
 
@@ -20,27 +19,22 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
+import java.util.concurrent.*;
 
 /**
  * Класс сервера.
  */
 
 public class Server extends Thread implements SenderReceiver {
+    public final int MAX_CLIENTS = 10;
 
     private HumanManager collectionManager;
     private ServerCommandManager commandManager;
-    private DBManager dbManager;
+    private DBManager databaseHandler;
+    private UserManager userManager;
+
     private int port;
     private DatagramChannel channel;
-    private volatile boolean running;
-    private User hostUser;
-    private Set<InetSocketAddress> activeClients;
-    public final int MAX_CLIENTS = 10;
 
     private ExecutorService receiverThreadPool;
     private ExecutorService senderThreadPool;
@@ -48,36 +42,55 @@ public class Server extends Thread implements SenderReceiver {
 
     private Queue<Map.Entry<InetSocketAddress, Request>> requestQueue;
     private Queue<Map.Entry<InetSocketAddress, Response>> responseQueue;
+    private Set<InetSocketAddress> activeClients;
+    private volatile boolean running;
 
     private Selector selector;
 
-    private UserManager userManager;
+    private User hostUser;
+
+    /**
+     * Инициализация
+     * @param p
+     * @param properties
+     * @throws ConnectionException
+     * @throws DatabaseException
+     */
 
     private void init(int p, Properties properties) throws ConnectionException, DatabaseException {
-        port = p;
-        hostUser = null;
         running = true;
+        port = p;
         setDaemon(true);
-        activeClients = ConcurrentHashMap.newKeySet();
+        hostUser = null;
         receiverThreadPool = Executors.newFixedThreadPool(MAX_CLIENTS);
         senderThreadPool = Executors.newFixedThreadPool(MAX_CLIENTS);
         requestHandlerThreadPool = Executors.newCachedThreadPool();
 
         requestQueue = new ConcurrentLinkedQueue<>();
         responseQueue = new ConcurrentLinkedQueue<>();
-        dbManager = new DBManager(properties.getProperty("url"), properties.getProperty("user"), properties.getProperty("password"));
-        userManager = new UserDBManager(dbManager);
-        collectionManager = new HumanDBManager(dbManager, userManager);
+        activeClients = ConcurrentHashMap.newKeySet();
+
+        databaseHandler = new DBManager(properties.getProperty("url"), properties.getProperty("user"), properties.getProperty("password"));
+        userManager = new UserDBManager(databaseHandler);
+        collectionManager = new HumanDBManager(databaseHandler, userManager);
         commandManager = new ServerCommandManager(this);
+
+
         try {
             collectionManager.deserializeCollection("");
-        } catch (CollectionException | DataBaseException e) {
+        } catch (CollectionException e) {
             Log.logger.error(e.getMessage());
         }
         host(port);
-        setName("Поток сервера.");
-        Log.logger.trace("Запуск сервера!");
+        setName("Серверный поток");
+        Log.logger.trace("Сервер запущен!");
     }
+
+    /**
+     * Размещение
+     * @param p
+     * @throws ConnectionException
+     */
 
     private void host(int p) throws ConnectionException {
         try {
@@ -93,26 +106,33 @@ public class Server extends Thread implements SenderReceiver {
         } catch (IllegalArgumentException e) {
             throw new InvalidPortException();
         } catch (IOException e) {
-            throw new ConnectionException("Что-то пошло не так во время инициализации сервера.");
+            throw new ConnectionException("что-то пошло не так во время инициализации сервера");
         }
     }
 
-    public Server(int port, Properties properties) throws ConnectionException, DataBaseException {
-        init(port, properties);
+
+    public Server(int p, Properties properties) throws ConnectionException, DatabaseException {
+        init(p, properties);
     }
+
+    /**
+     * Получение запроса от клиента.
+     * @throws ConnectionException
+     * @throws InvalidDataException
+     */
 
     public void receive() throws ConnectionException, InvalidDataException {
         ByteBuffer buf = ByteBuffer.allocate(BUFFER_SIZE);
-        InetSocketAddress clientAddress = null;
-        Request request = null;
+        InetSocketAddress clientAddress;
+        Request request;
         try {
             clientAddress = (InetSocketAddress) channel.receive(buf);
             if (clientAddress == null) return;
-            Log.logger.trace("received request from " + clientAddress);
+            Log.logger.trace("получен запрос от " + clientAddress);
         } catch (ClosedChannelException e) {
             throw new ClosedConnectionException();
         } catch (IOException e) {
-            throw new ConnectionException("something went wrong during receiving request");
+            throw new ConnectionException("что-то пошло не так во время получения запроса");
         }
         try {
             ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(buf.array()));
@@ -122,51 +142,61 @@ public class Server extends Thread implements SenderReceiver {
         }
         if (request != null && request.getBroadcastAddress() != null) {
             activeClients.add(request.getBroadcastAddress());
-            Log.logger.trace("added broadcast address " + request.getBroadcastAddress().toString());
+            Log.logger.trace("добавлен широковещательный адрес " + request.getBroadcastAddress().toString());
         }
         requestQueue.offer(new AbstractMap.SimpleEntry<>(clientAddress, request));
 
     }
 
     private void broadcast(Response response, InetSocketAddress currentAddress) {
-        Log.logger.trace("broadcasting changes");
+        Log.logger.trace("изменения в вещании");
         for (InetSocketAddress client : activeClients) {
             if (!currentAddress.equals(client)) responseQueue.offer(new AbstractMap.SimpleEntry<>(client, response));
         }
     }
 
     public void broadcast(Response response) {
-        Log.logger.trace("broadcasting changes");
+        Log.logger.trace("изменения в вещании");
         for (InetSocketAddress client : activeClients) {
             responseQueue.offer(new AbstractMap.SimpleEntry<>(client, response));
         }
     }
 
     /**
-     * sends response
+     * Отправляет ответ
+     * @param clientAddress
+     * @param response
+     * @throws ConnectionException
      */
 
     public void send(InetSocketAddress clientAddress, Response response) throws ConnectionException {
-        if (clientAddress == null) throw new InvalidAddressException("no client address found");
+        if (clientAddress == null) throw new InvalidAddressException("адрес клиента не найден");
         try {
 
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(BUFFER_SIZE);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
             objectOutputStream.writeObject(response);
             channel.send(ByteBuffer.wrap(byteArrayOutputStream.toByteArray()), clientAddress);
-            Log.logger.trace("sent response to " + clientAddress.toString());
+            Log.logger.trace("отправил ответ на " + clientAddress);
         } catch (IOException e) {
-            throw new ConnectionException("something went wrong during sending response");
+            throw new ConnectionException("что-то пошло не так во время отправки ответа");
         }
     }
+
+    /**
+     * Запрос
+     * @param address
+     * @param request
+     */
 
     private void handleRequest(InetSocketAddress address, Request request) {
         AnswerMsg answerMsg = new AnswerMsg();
         try {
+
             InetSocketAddress client = request.getBroadcastAddress();
             if (request.getStatus() == Request.Status.EXIT) {
                 activeClients.remove(client);
-                Log.logger.info("client " + address.toString() + " shut down");
+                Log.logger.info("клиент " + address.toString() + " пошёл пить пиво");
                 return;
             }
             if (request.getStatus() == Request.Status.HELLO) {
@@ -193,6 +223,7 @@ public class Server extends Thread implements SenderReceiver {
             }
             answerMsg = (AnswerMsg) commandManager.runCommand(request);
 
+
             if (answerMsg.getStatus() == Response.Status.EXIT) {
                 close();
             }
@@ -206,7 +237,12 @@ public class Server extends Thread implements SenderReceiver {
             broadcast(answerMsg, request.getBroadcastAddress());
         }
         responseQueue.offer(new AbstractMap.SimpleEntry<>(address, answerMsg));
+
     }
+
+    /**
+     * Запуск сервера в многопоточке
+     */
 
     public void run() {
         while (running) {
@@ -236,12 +272,16 @@ public class Server extends Thread implements SenderReceiver {
         }
     }
 
+    /**
+     * Запуск сервера в консоль
+     */
+
     public void consoleMode() {
         commandManager.consoleMode();
     }
 
     /**
-     * Закрытие сервера и соединения.
+     * Закрытие сервера
      */
 
     public void close() {
@@ -260,11 +300,27 @@ public class Server extends Thread implements SenderReceiver {
             receiverThreadPool.shutdown();
             requestHandlerThreadPool.shutdown();
             senderThreadPool.shutdown();
-            dbManager.closeConnection();
+            databaseHandler.closeConnection();
             channel.close();
         } catch (IOException e) {
-            Log.logger.error("cannot close channel");
+            Log.logger.error("не удается закрыть канал");
         }
+    }
+
+    public HumanManager getCollectionManager() {
+        return collectionManager;
+    }
+
+    public UserManager getUserManager() {
+        return userManager;
+    }
+
+    public User getHostUser() {
+        return hostUser;
+    }
+
+    public void setHostUser(User usr) {
+        hostUser = usr;
     }
 
     private class Receiver implements Runnable {
@@ -307,22 +363,6 @@ public class Server extends Thread implements SenderReceiver {
                 Log.logger.error(e.getMessage());
             }
         }
-    }
-
-    public UserManager getUserManager() {
-        return userManager;
-    }
-
-    public User getHostUser() {
-        return hostUser;
-    }
-
-    public void setHostUser(User usr) {
-        hostUser = usr;
-    }
-
-    public HumanManager getCollectionManager() {
-        return collectionManager;
     }
 
     public boolean isRunning() {

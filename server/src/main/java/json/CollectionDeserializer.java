@@ -5,15 +5,17 @@ import common.data.HumanBeing;
 import log.Log;
 
 import java.lang.reflect.Type;
+import java.util.Deque;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 
 /**
  * Десериализатор.
  */
 
-public class CollectionDeserializer implements JsonDeserializer<Vector<HumanBeing>> {
+public class CollectionDeserializer implements JsonDeserializer<Deque<HumanBeing>> {
     private final Set<Integer> uniqueIds;
 
     public CollectionDeserializer(Set<Integer> uniqueIds) {
@@ -21,8 +23,8 @@ public class CollectionDeserializer implements JsonDeserializer<Vector<HumanBein
     }
 
     @Override
-    public Vector<HumanBeing> deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
-        Vector<HumanBeing> collection = new Vector<>();
+    public Deque<HumanBeing> deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
+        Deque<HumanBeing> collection = new ConcurrentLinkedDeque<>();
         JsonArray humans = json.getAsJsonArray();
         int damagedElements = 0;
         for (JsonElement jsonHuman : humans) {

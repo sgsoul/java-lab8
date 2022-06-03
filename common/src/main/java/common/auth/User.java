@@ -3,11 +3,9 @@ package common.auth;
 import common.crypto.SHA512Generator;
 import common.exceptions.EncryptionException;
 
-import java.io.Serial;
 import java.io.Serializable;
 
 public class User implements Serializable {
-    @Serial
     private static final long serialVersionUID = 8347617547303456361L;
 
     private final String username;

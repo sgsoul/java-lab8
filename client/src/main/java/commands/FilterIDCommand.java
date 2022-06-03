@@ -4,6 +4,7 @@ import collection.HumanObservableManager;
 import common.commands.CommandImpl;
 import common.commands.CommandType;
 import common.data.HumanBeing;
+import common.exceptions.InvalidDataException;
 import common.exceptions.MissedCommandArgumentException;
 import controllers.MainWindowController;
 import javafx.application.Platform;
@@ -19,19 +20,23 @@ public class FilterIDCommand extends CommandImpl {
     }
 
     @Override
-    public String execute() {
+    public String execute() throws InvalidDataException {
         if (!hasStringArg()) throw new MissedCommandArgumentException();
-        String start = getStringArg();
-        List<HumanBeing> list = collectionManager.filterID(getHumanArg().getId());
-        MainWindowController controller = collectionManager.getController();
-   /*     Platform.runLater(() -> {
-            controller.getFilter().filter(controller.getIDColumn(),
-                    "^" + getStringArg() + ".*",
-                    HumanBeing::getId);
-        }); */
-        if (list.isEmpty()) return "Ни один из элементов не имеет id " + start;
-        return list.stream()
-                .sorted(new HumanBeing.SortingComparator())
-                .map(HumanBeing::toString).reduce("", (a, b) -> a + b + "\n");
+        try {
+            String start = getStringArg();
+            List<HumanBeing> list = collectionManager.filterID(Integer.parseInt(getStringArg()));
+            MainWindowController controller = collectionManager.getController();
+            Platform.runLater(() -> {
+                controller.getFilter().filter(controller.getIDColumn(),
+                        "^" + getStringArg() + "$",
+                        human -> String.valueOf(human.getId()));
+            });
+            if (list.isEmpty()) return "Ни один из элементов не имеет id " + start;
+            return list.stream()
+                    .sorted(new HumanBeing.SortingComparator())
+                    .map(HumanBeing::toString).reduce("", (a, b) -> a + b + "\n");
+        } catch (NumberFormatException e) {
+            throw new InvalidDataException("[IdFormatException]");
+        }
     }
 }

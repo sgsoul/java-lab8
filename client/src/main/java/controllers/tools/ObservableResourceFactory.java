@@ -60,18 +60,6 @@ public class ObservableResourceFactory {
         };
     }
 
-    public StringBinding getFormattedBunding(String key) {
-        return new StringBinding() {
-            {
-                bind(resourcesProperty());
-            }
-
-            @Override
-            public String computeValue() {
-                return getString(key);
-            }
-        };
-    }
     public String getString(String key){
         String res;
         if(key.contains(" ") && key.contains("[") && key.contains("]")){

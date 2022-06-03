@@ -50,7 +50,7 @@ public class App extends Application {
             }
             if (args.length == 1) {
                 strPort = args[0];
-                print("no address passed by arguments, setting default : " + address);
+                print("нет адреса, передаваемого аргументами, установка по умолчанию : " + address);
             }
             if (args.length == 0) {
                 print("no port and no address passed by arguments, setting default :" + address + "/" + strPort);

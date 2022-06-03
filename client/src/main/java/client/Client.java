@@ -39,12 +39,17 @@ public class Client extends Thread implements SenderReceiver {
     private volatile boolean authSuccess;
     private volatile boolean receivedRequest;
     private ObservableResourceFactory resourceFactory;
-
+    public boolean isReceivedRequest(){
+        return receivedRequest;
+    }
     private boolean connected;
     private HumanObservableManager collectionManager;
 
     /**
      * Инициализация клиента.
+     * @param addr
+     * @param p
+     * @throws ConnectionException
      */
 
     private void init(String addr, int p) throws ConnectionException {
@@ -79,6 +84,9 @@ public class Client extends Thread implements SenderReceiver {
 
     /**
      * Подключение к серверу.
+     * @param addr
+     * @param p
+     * @throws ConnectionException
      */
 
     public void connect(String addr, int p) throws ConnectionException {
@@ -95,12 +103,14 @@ public class Client extends Thread implements SenderReceiver {
             host = new InetSocketAddress(InetAddress.getByName("localhost"), broadcastSocket.getLocalPort());
             socket.setSoTimeout(MAX_TIME_OUT);
         } catch (IOException e) {
-            throw new ConnectionException("cannot open socket");
+            throw new ConnectionException("не удалось открыть сокет");
         }
     }
 
     /**
      * Запрос серверу.
+     * @param request
+     * @throws ConnectionException
      */
 
     public void send(Request request) throws ConnectionException {
@@ -113,12 +123,15 @@ public class Client extends Thread implements SenderReceiver {
             socket.send(requestPacket);
             byteArrayOutputStream.close();
         } catch (IOException e) {
-            throw new ConnectionException("something went wrong while sending request");
+            throw new ConnectionException("что-то пошло не так при отправке запроса");
         }
     }
 
     /**
      * Получение ответа.
+     * @return
+     * @throws ConnectionException
+     * @throws InvalidDataException
      */
 
     public Response receive() throws ConnectionException, InvalidDataException {
@@ -133,6 +146,7 @@ public class Client extends Thread implements SenderReceiver {
         try {
             socket.receive(receivePacket);
         } catch (SocketTimeoutException e) {
+            e.printStackTrace();
             for (int attempts = MAX_ATTEMPTS; attempts > 0; attempts--) {
                 try {
                     socket.receive(receivePacket);
@@ -142,29 +156,7 @@ public class Client extends Thread implements SenderReceiver {
             }
             throw new ConnectionTimeoutException();
         } catch (IOException e) {
-            throw new ConnectionException("something went wrong while receiving response");
-        }
-        connected = true;
-        try {
-            ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(bytes.array()));
-            return (Response) objectInputStream.readObject();
-        } catch (ClassNotFoundException | ClassCastException | IOException e) {
-            throw new InvalidReceivedDataException();
-        }
-    }
-
-    private Response receiveBroadcast() throws ConnectionException, InvalidDataException {
-        try {
-            broadcastSocket.setSoTimeout(0);
-        } catch (SocketException ignored) {
-
-        }
-        ByteBuffer bytes = ByteBuffer.allocate(BUFFER_SIZE);
-        DatagramPacket receivePacket = new DatagramPacket(bytes.array(), bytes.array().length);
-        try {
-            broadcastSocket.receive(receivePacket);
-        } catch (IOException e) {
-            throw new ConnectionException("something went wrong while receiving response");
+            throw new ConnectionException("что-то пошло не так при получении ответа");
         }
         connected = true;
         try {
@@ -176,7 +168,35 @@ public class Client extends Thread implements SenderReceiver {
     }
 
     /**
-     * Запуск.
+     * Прием широковещательной передачи
+     * @return
+     * @throws ConnectionException
+     * @throws InvalidDataException
+     */
+    private Response receiveBroadcast() throws ConnectionException, InvalidDataException{
+        try {
+            broadcastSocket.setSoTimeout(0);
+        } catch (SocketException ignored) {
+
+        }
+        ByteBuffer bytes = ByteBuffer.allocate(BUFFER_SIZE);
+        DatagramPacket receivePacket = new DatagramPacket(bytes.array(), bytes.array().length);
+        try {
+            broadcastSocket.receive(receivePacket);
+        } catch (IOException e) {
+            throw new ConnectionException("что-то пошло не так при получении ответа");
+        }
+        connected=true;
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(bytes.array()));
+            return (Response) objectInputStream.readObject();
+        } catch (ClassNotFoundException | ClassCastException | IOException e) {
+            throw new InvalidReceivedDataException();
+        }
+    }
+
+    /**
+     * Запуск
      */
 
     @Override
@@ -190,7 +210,7 @@ public class Client extends Thread implements SenderReceiver {
                 collectionManager.applyChanges(response);
             }
         } catch (ConnectionException | InvalidDataException e) {
-            printErr("cannot load collection from server");
+            printErr("не удается загрузить коллекцию с сервера");
         }
         while (running) {
             try {
@@ -200,10 +220,10 @@ public class Client extends Thread implements SenderReceiver {
                 switch (response.getStatus()) {
                     case COLLECTION:
                         collectionManager.applyChanges(response);
-                        print("loaded!");
+                        print("загружено!");
                         break;
                     case BROADCAST:
-                        print("caught broadcast!");
+                        print("пойманный эфир!");
                         collectionManager.applyChanges(response);
                         break;
                     case AUTH_SUCCESS:
@@ -212,7 +232,7 @@ public class Client extends Thread implements SenderReceiver {
                         break;
                     case EXIT:
                         connected = false;
-                        print("server shut down");
+                        print("сервер выключен");
                         outputManager.error("[ServerShutDown]");
                         break;
                     case FINE:
@@ -232,6 +252,10 @@ public class Client extends Thread implements SenderReceiver {
         }
     }
 
+    /**
+     * проверка соединения
+     */
+
     public void connectionTest() {
         connected = false;
         try {
@@ -242,6 +266,13 @@ public class Client extends Thread implements SenderReceiver {
 
         }
     }
+
+    /**
+     * проверка аутентификации
+     * @param login
+     * @param password
+     * @param register
+     */
 
     public void processAuthentication(String login, String password, boolean register) {
         attempt = new User(login, password);
@@ -306,7 +337,7 @@ public class Client extends Thread implements SenderReceiver {
     }
 
     /**
-     * Закрытие клиента.
+     * Закрытие сервера
      */
 
     public void close() {

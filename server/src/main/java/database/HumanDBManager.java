@@ -58,7 +58,7 @@ public class HumanDBManager extends HumanCollectionManager {
         try (PreparedStatement createStatement = dbManager.getPreparedStatement(create)) {
             createStatement.execute();
         } catch (SQLException e) {
-            throw new DataBaseException("cannot create worker database");
+            throw new DataBaseException("cannot create human database");
         }
     }
 
@@ -269,6 +269,7 @@ public class HumanDBManager extends HumanCollectionManager {
         dbManager.setCommitMode();
         dbManager.setSavepoint();
         Set<HumanBeing> removed = new HashSet<>();
+
         try (PreparedStatement statement = dbManager.getPreparedStatement("DELETE FROM HUMANS WHERE user_login=? RETURNING id")) {
             statement.setString(1, user.getLogin());
             ResultSet resultSet = statement.executeQuery();
@@ -280,11 +281,11 @@ public class HumanDBManager extends HumanCollectionManager {
         } catch (SQLException | CollectionException e) {
             dbManager.rollback();
             deserializeCollection("");
-            throw new DataBaseException("cannot clear database");
+            throw new DatabaseException("cannot clear database");
         } finally {
             dbManager.setNormalMode();
         }
-        return removed;
+        return  removed;
     }
 
     @Override
@@ -297,20 +298,19 @@ public class HumanDBManager extends HumanCollectionManager {
             int damagedElements = 0;
             while (resultSet.next()) {
                 try {
-                    HumanBeing human = getHuman(resultSet);
-                    if (!human.validate()) throw new InvalidDataException("element is damaged");
-                    super.addWithoutIdGeneration(human);
+                    HumanBeing humanBeing = getHuman(resultSet);
+                    if (!humanBeing.validate()) throw new InvalidDataException("element is damaged");
+                    super.addWithoutIdGeneration(humanBeing);
                 } catch (InvalidDataException | SQLException e) {
                     damagedElements += 1;
                 }
             }
-            if (super.getCollection().isEmpty()) throw new DataBaseException("nothing to load");
+            if (super.getCollection().isEmpty()) throw new DatabaseException("nothing to load");
             if (damagedElements == 0) Log.logger.info("collection successfully loaded");
             else Log.logger.warn(damagedElements + " elements are damaged");
         } catch (SQLException e) {
-            throw new DataBaseException("cannot load");
+            throw new DatabaseException("cannot load");
         }
+
     }
-
-
 }
