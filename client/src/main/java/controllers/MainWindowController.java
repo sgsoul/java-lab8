@@ -554,16 +554,16 @@ public class MainWindowController {
     private void shapeOnMouseClicked(MouseEvent event) {
         Shape shape = (Shape) event.getSource();
         long id = shapeMap.get(shape);
-        for (HumanBeing worker : humanTable.getItems()) {
-            if (worker.getId() == id) {
+        for (HumanBeing human : humanTable.getItems()) {
+            if (human.getId() == id) {
 
                 if (shapeTooltip != null && shapeTooltip.isShowing()) shapeTooltip.hide();
                 if (event.getButton() == MouseButton.SECONDARY) {
-                    shapeTooltip = new Tooltip(worker.toString());
+                    shapeTooltip = new Tooltip(human.toString());
                     shapeTooltip.setAutoHide(true);
                     shapeTooltip.show(shape, event.getScreenX(), event.getScreenY());
                 }
-                humanTable.getSelectionModel().select(worker);
+                humanTable.getSelectionModel().select(human);
                 break;
             }
         }
