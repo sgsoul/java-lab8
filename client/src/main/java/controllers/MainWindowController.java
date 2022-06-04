@@ -299,7 +299,7 @@ public class MainWindowController {
 
     @FXML
     public void refreshButtonOnAction() {
-        processAction(new CommandMsg("show"));
+        humanTable.setItems(client.getHumanManager().getCollection());
     }
 
 
@@ -316,9 +316,9 @@ public class MainWindowController {
             try {
                 processAction(new CommandMsg("update").setArgument(Integer.toString(human.getId())).setHuman(askWindowController.readHuman()));
             } catch (InvalidDataException e) {
-                e.printStackTrace();
             }
         }
+        refreshButtonOnAction();
     }
 
     /**
@@ -329,7 +329,7 @@ public class MainWindowController {
     private void removeButtonOnAction() {
         HumanBeing human = humanTable.getSelectionModel().getSelectedItem();
         if (human != null) processAction(new CommandMsg("remove_by_id").setArgument(Integer.toString(human.getId())));
-        humanTable.refresh();
+        refreshButtonOnAction();
     }
 
 
@@ -340,14 +340,8 @@ public class MainWindowController {
     @FXML
     private void clearButtonOnAction() {
         client.getCommandManager().runCommand(new CommandMsg("clear"));
-        setClient(client);
-        humanTable.refresh();
-    }
-
-    @FXML
-    private void resetButtonOnAction() {
-        setClient(client);
-        humanTable.refresh();
+        refreshTable();
+        refreshButtonOnAction();
     }
 
     /**
@@ -361,6 +355,8 @@ public class MainWindowController {
         } catch (InvalidDataException ignored) {
 
         }
+        refreshTable();
+        refreshButtonOnAction();
     }
 
     @FXML
@@ -463,6 +459,7 @@ public class MainWindowController {
             throw new InvalidDataException("[IdFormatException]");
         }
     }
+
     /**
      * Request action.
      */
@@ -560,16 +557,16 @@ public class MainWindowController {
     private void shapeOnMouseClicked(MouseEvent event) {
         Shape shape = (Shape) event.getSource();
         long id = shapeMap.get(shape);
-        for (HumanBeing worker : humanTable.getItems()) {
-            if (worker.getId() == id) {
+        for (HumanBeing human : humanTable.getItems()) {
+            if (human.getId() == id) {
 
                 if (shapeTooltip != null && shapeTooltip.isShowing()) shapeTooltip.hide();
                 if (event.getButton() == MouseButton.SECONDARY) {
-                    shapeTooltip = new Tooltip(worker.toString());
+                    shapeTooltip = new Tooltip(human.toString());
                     shapeTooltip.setAutoHide(true);
                     shapeTooltip.show(shape, event.getScreenX(), event.getScreenY());
                 }
-                humanTable.getSelectionModel().select(worker);
+                humanTable.getSelectionModel().select(human);
                 break;
             }
         }

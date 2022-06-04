@@ -30,8 +30,8 @@ public class UpdateCommand extends CommandImpl {
         Integer id = parseId(getStringArg());
         if (!collectionManager.checkID(id)) throw new InvalidCommandArgumentException("ID не найден.");
         String owner = collectionManager.getByID(id).getUserLogin();
-        String workerCreatorLogin = user.getLogin();
-        if (workerCreatorLogin == null || !workerCreatorLogin.equals(owner))
+        String humanCreatorLogin = user.getLogin();
+        if (humanCreatorLogin == null || !humanCreatorLogin.equals(owner))
             throw new PermissionException(owner);
 
         collectionManager.updateByID(id, getHumanArg());

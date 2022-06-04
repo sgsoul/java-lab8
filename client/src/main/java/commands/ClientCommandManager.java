@@ -40,7 +40,6 @@ public class ClientCommandManager extends CommandManager {
                 res.info("shutting down...");
             }
         } else {
-            //lock.lock();
             if (client.getUser() != null && msg.getUser() == null) msg.setUser(client.getUser());
             else client.setAttemptUser(msg.getUser());
             try {

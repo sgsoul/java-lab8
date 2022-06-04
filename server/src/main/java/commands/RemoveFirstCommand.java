@@ -32,8 +32,8 @@ public class RemoveFirstCommand extends CommandImpl {
         HumanBeing human = collectionManager.getCollection().iterator().next();
         int id = human.getId();
         String owner = collectionManager.getByID(id).getUserLogin();
-        String workerCreatorLogin = user.getLogin();
-        if (workerCreatorLogin == null || !workerCreatorLogin.equals(owner))
+        String humanCreatorLogin = user.getLogin();
+        if (humanCreatorLogin == null || !humanCreatorLogin.equals(owner))
             throw new PermissionException(owner);
         collectionManager.removeFirst();
         return new AnswerMsg().info("Элемент #" + id + " удалён.").setCollection(List.of(human));
