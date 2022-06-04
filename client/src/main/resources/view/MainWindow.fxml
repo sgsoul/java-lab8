@@ -73,7 +73,7 @@
             <Button fx:id="filterStartsWithNameButton" mnemonicParsing="false" onAction="#filterStartsWithNameButtonOnAction" prefHeight="25.0" prefWidth="122.0" text="filterStartsWithNameButton" />
             <Button fx:id="filterStartsWithSoundtrackButton" mnemonicParsing="false" onAction="#filterStartsWithSoundtrackButtonOnAction" text="filterStartsWithSoundtrackButton" />
             <Button fx:id="filterIdButton" mnemonicParsing="false" onAction="#filterIdButtonOnAction" text="filterIdButton" />
-         <Button fx:id="exitButton" mnemonicParsing="false" onAction="#exitButtonOnAction" text="exitButton" />
+         <Button fx:id="exitButton" mnemonicParsing="false" onAction="#exitButtonOnAction" text="Назад" />
         </FlowPane>
     </VBox>
     <HBox alignment="CENTER_RIGHT" spacing="10.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0">

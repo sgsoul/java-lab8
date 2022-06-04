@@ -40,6 +40,7 @@ import main.App;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Main window controller.
@@ -300,6 +301,7 @@ public class MainWindowController {
     @FXML
     public void refreshButtonOnAction() {
         humanTable.setItems(client.getHumanManager().getCollection());
+        humanTable.refresh();
     }
 
 
@@ -373,13 +375,19 @@ public class MainWindowController {
         TextField textField = new TextField();
         Button button = new Button();
         button.textProperty().bind(resourceFactory.getStringBinding("EnterButton"));
-        button.setOnAction((e) -> {
-            String arg = textField.getText();
-            if (arg != null && !arg.equals("")) {
-                processAction(new CommandMsg("filter_starts_with_name").setArgument(arg));
-                stage.close();
-            }
-
+//        button.setOnAction((e) -> {
+//            String arg = textField.getText();
+//            if (arg != null && !arg.equals("")) {
+//                processAction(new CommandMsg("filter_starts_with_name").setArgument(arg));
+//                stage.close();
+//            }
+//
+//        });
+        button.setOnAction(event -> {
+            String filter = textField.getText();
+            List<HumanBeing> filtered = client.getHumanManager().getCollection().stream().filter(h -> h.getName().startsWith(filter)).collect(Collectors.toList());
+            humanTable.setItems(FXCollections.observableArrayList(filtered));
+            humanTable.refresh();
         });
         nameLabel.textProperty().bind(resourceFactory.getStringBinding("NameColumn"));
         button.setAlignment(Pos.CENTER);
@@ -403,13 +411,19 @@ public class MainWindowController {
         TextField textField = new TextField();
         Button button = new Button();
         button.textProperty().bind(resourceFactory.getStringBinding("EnterButton"));
-        button.setOnAction((e) -> {
+        /*button.setOnAction((e) -> {
             String arg = textField.getText();
             if (arg != null && !arg.equals("")) {
                 processAction(new CommandMsg("filter_starts_with_soundtrack").setArgument(arg));
                 stage.close();
             }
 
+        });*/
+        button.setOnAction(event -> {
+            String filter = textField.getText();
+            List<HumanBeing> filtered = client.getHumanManager().getCollection().stream().filter(h -> h.getSoundtrackName().startsWith(filter)).collect(Collectors.toList());
+            humanTable.setItems(FXCollections.observableArrayList(filtered));
+            humanTable.refresh();
         });
         soundtrackNameLabel.textProperty().bind(resourceFactory.getStringBinding("SoundtrackNameColumn"));
         button.setAlignment(Pos.CENTER);
@@ -434,15 +448,20 @@ public class MainWindowController {
             TextField textField = new TextField();
             Button button = new Button();
             button.textProperty().bind(resourceFactory.getStringBinding("EnterButton"));
-            button.setOnAction((e) -> {
+            /*button.setOnAction((e) -> {
                 String arg = textField.getText();
                 if (arg != null && !arg.equals("")) {
                     processAction(new CommandMsg("filter_id").setArgument(arg));
                     stage.close();
                 }
 
+            });*/
+            button.setOnAction(event -> {
+                int filter = Integer.parseInt(textField.getText());
+                List<HumanBeing> filtered = client.getHumanManager().getCollection().stream().filter(h -> h.getId() == filter).collect(Collectors.toList());
+                humanTable.setItems(FXCollections.observableArrayList(filtered));
+                humanTable.refresh();
             });
-
             idLabel.textProperty().bind(resourceFactory.getStringBinding("IdColumn"));
             button.setAlignment(Pos.CENTER);
 
