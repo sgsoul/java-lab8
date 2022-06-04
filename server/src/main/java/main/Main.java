@@ -18,9 +18,9 @@ public class Main {
         String strPort = "5432";
         String user = "postgres";
         String dbHost = "postgres";
-        String password = "arina";
+        String password = "qwerty";
         String url = "jdbc:postgresql://localhost:5432/postgres";
-        args = new String[]{"5432", "postgres", "postgres", "arina"};
+        args = new String[]{"5432", "postgres", "postgres", "qwerty"};
         try {
             if (args.length == 4) {
                 strPort = args[0];

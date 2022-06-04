@@ -212,7 +212,7 @@ public class HumanBeing implements Collectionable, Serializable {
     public boolean validate() {
         return (
                 coordinates != null && coordinates.validate() &&
-                        (car == null) &&
+                        (car == null || car.validate()) &&
                         (impactSpeed > 0) && (id > 0) &&
                         name != null && !name.equals("") &&
                         weaponType != null &&

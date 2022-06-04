@@ -22,4 +22,10 @@ public class Car implements Serializable {
         return name;
     }
 
+    public boolean validate() {
+        return (
+                (name == null || (!name.equals("") && !(name.length() > 1237)))
+        );
+    }
+
 }
