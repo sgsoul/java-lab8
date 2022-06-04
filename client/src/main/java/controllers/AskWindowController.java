@@ -64,6 +64,7 @@ public class AskWindowController {
     @FXML
     private Button enterButton;
 
+
     private Stage askStage;
     private HumanBeing resultHuman;
     private ObservableResourceFactory resourceFactory;
@@ -168,7 +169,7 @@ public class AskWindowController {
     public HumanBeing readHuman() throws InvalidDataException {
         askStage.showAndWait();
 
-        if (human == null) throw new InvalidDataException("Чел пуст");
+        if (human == null) throw new InvalidDataException("пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ");
         return human;
 
     }
@@ -242,5 +243,6 @@ public class AskWindowController {
         weaponTypeLabel.textProperty().bind(resourceFactory.getStringBinding("WeaponTypeColumn"));
         carLabel.textProperty().bind(resourceFactory.getStringBinding("CarColumn"));
         enterButton.textProperty().bind(resourceFactory.getStringBinding("EnterButton"));
+        backButton.textProperty().bind(resourceFactory.getStringBinding("BackButton"));
     }
 }

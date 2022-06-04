@@ -119,6 +119,8 @@ public class MainWindowController {
     private Button filterStartsWithSoundtrackButton;
     @FXML
     private Button filterIdButton;
+    @FXML
+    private Button backButton;
 
     private App app;
     private Stage askStage;
@@ -277,7 +279,7 @@ public class MainWindowController {
         tableTab.textProperty().bind(resourceFactory.getStringBinding("TableTab"));
         canvasTab.textProperty().bind(resourceFactory.getStringBinding("CanvasTab"));
 
-        //exitButton.textProperty().bind(resourceFactory.getStringBinding("ExitButton"));
+        exitButton.textProperty().bind(resourceFactory.getStringBinding("ExitButton"));
         addButton.textProperty().bind(resourceFactory.getStringBinding("AddButton"));
         updateButton.textProperty().bind(resourceFactory.getStringBinding("UpdateButton"));
         removeButton.textProperty().bind(resourceFactory.getStringBinding("RemoveButton"));
@@ -456,8 +458,16 @@ public class MainWindowController {
                 }
 
             });*/
+
             button.setOnAction(event -> {
-                int filter = Integer.parseInt(textField.getText());
+                int filter;
+                try {
+                    filter = Integer.parseInt(textField.getText());
+                } catch (NumberFormatException e) {
+                    humanTable.setItems(FXCollections.observableArrayList());
+                    humanTable.refresh();
+                   return;
+                }
                 List<HumanBeing> filtered = client.getHumanManager().getCollection().stream().filter(h -> h.getId() == filter).collect(Collectors.toList());
                 humanTable.setItems(FXCollections.observableArrayList(filtered));
                 humanTable.refresh();
