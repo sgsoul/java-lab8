@@ -32,7 +32,7 @@ public abstract class CommandManager implements Commandable, Closeable {
     public CommandManager() {
         isRunning = false;
         currentScriptFileName = "";
-        map = new HashMap<>();
+        map = new HashMap<String, Command>();
     }
 
     public void addCommand(Command c) {
@@ -102,7 +102,7 @@ public abstract class CommandManager implements Commandable, Closeable {
     }
 
     public Response runCommandUnsafe(Request msg) throws CommandException, InvalidDataException, ConnectionException, FileException, CollectionException {
-        AnswerMsg res;
+        AnswerMsg res = new AnswerMsg();
         Command cmd = getCommand(msg);
         cmd.setArgument(msg);
         res = (AnswerMsg) cmd.run();
@@ -169,5 +169,10 @@ public abstract class CommandManager implements Commandable, Closeable {
 
     public void close() {
         setRunning(false);
+    }
+
+
+    public boolean isRunning() {
+        return isRunning;
     }
 }

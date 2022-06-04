@@ -66,6 +66,16 @@ public class DBManager {
         return getPreparedStatement(sql, false);
     }
 
+    public void closePreparedStatement(PreparedStatement sqlStatement) {
+        if (sqlStatement == null) return;
+        try {
+            sqlStatement.close();
+            //App.logger.info("Закрыт SQL запрос '" + sqlStatement + "'.");
+        } catch (SQLException exception) {
+            //App.logger.error("Произошла ошибка при закрытии SQL запроса '" + sqlStatement + "'.");
+        }
+    }
+
     /**
      * Close connection to database.
      */

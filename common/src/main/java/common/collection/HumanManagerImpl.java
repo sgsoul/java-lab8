@@ -8,7 +8,7 @@ import common.exceptions.NoSuchIdException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class HumanManagerImpl implements HumanManager {
+public abstract class HumanManagerImpl<T extends Collection<HumanBeing>> implements HumanManager {
 
     private final java.time.LocalDateTime initDate;
 

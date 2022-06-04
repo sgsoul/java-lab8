@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * Управление коллекцией.
  */
 
-public class HumanCollectionManager extends HumanManagerImpl {
+public class HumanCollectionManager extends HumanManagerImpl<ConcurrentLinkedDeque<HumanBeing>> {
     private Deque<HumanBeing> collection;
     private final java.time.LocalDateTime initDate;
     private final Set<Integer> uniqueIds;
@@ -206,6 +206,24 @@ public class HumanCollectionManager extends HumanManagerImpl {
         return human.get();
     }
 
+        protected Collection<HumanBeing> getAll(Collection<Integer> ids){
+        Iterator<Integer> iterator = ids.iterator();
+        Collection<HumanBeing> selected = new HashSet<>();
+        while (iterator.hasNext()){
+            Integer id = iterator.next();
+            selected.addAll(collection.stream().filter(h->h.getId()==id).collect(Collectors.toCollection(HashSet::new)));
+            iterator.remove();
+        }
+        return selected;
+    }
+    protected void removeAll(Collection<Integer> ids) {
+        Iterator<Integer> iterator = ids.iterator();
+        while (iterator.hasNext()) {
+            Integer id = iterator.next();
+            collection.removeIf(human -> human.getId() == id);
+            iterator.remove();
+        }
+    }
     public void assertNotEmpty() {
         if (collection.isEmpty()) throw new EmptyCollectionException();
     }

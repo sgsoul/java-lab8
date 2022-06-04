@@ -123,8 +123,8 @@ public class Server extends Thread implements SenderReceiver {
 
     public void receive() throws ConnectionException, InvalidDataException {
         ByteBuffer buf = ByteBuffer.allocate(BUFFER_SIZE);
-        InetSocketAddress clientAddress;
-        Request request;
+        InetSocketAddress clientAddress = null;
+        Request request = null;
         try {
             clientAddress = (InetSocketAddress) channel.receive(buf);
             if (clientAddress == null) return;

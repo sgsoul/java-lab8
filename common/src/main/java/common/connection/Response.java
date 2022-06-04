@@ -11,7 +11,7 @@ public interface Response extends Serializable {
 
     Status getStatus();
 
-    Collection<HumanBeing> getCollection();
+    public Collection<HumanBeing> getCollection();
 
     enum Status {
         ERROR,

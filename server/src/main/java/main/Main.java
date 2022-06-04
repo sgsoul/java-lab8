@@ -17,12 +17,14 @@ public class Main {
         int port;
         String strPort = "5432";
         String user = "postgres";
-        String password = "arina";
+        String dbHost = "postgres";
+        String password = "qwerty";
         String url = "jdbc:postgresql://localhost:5432/postgres";
-        args = new String[]{"5432", "postgres", "postgres", "arina"};
+        args = new String[]{"5432", "postgres", "postgres", "qwerty"};
         try {
             if (args.length == 4) {
                 strPort = args[0];
+                dbHost=args[1];
                 user = args[2];
                 password = args[3];
 

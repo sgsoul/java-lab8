@@ -4,16 +4,13 @@ import common.exceptions.*;
 
 import java.io.*;
 
-/**
- * Операции с коллекцией относительно файла.
- */
 
 public class FileManager implements ReaderWriter {
     private String path;
     private File file;
 
     /**
-     * Конструктор.
+     * Constructor.
      */
 
     public FileManager(String pth) {

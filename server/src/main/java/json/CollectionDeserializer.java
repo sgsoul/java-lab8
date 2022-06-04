@@ -28,7 +28,7 @@ public class CollectionDeserializer implements JsonDeserializer<Deque<HumanBeing
         JsonArray humans = json.getAsJsonArray();
         int damagedElements = 0;
         for (JsonElement jsonHuman : humans) {
-            HumanBeing human;
+            HumanBeing human = null;
             try {
                 if (jsonHuman.getAsJsonObject().entrySet().isEmpty()) {
                     Log.logger.error("Найден пустой человек.");
