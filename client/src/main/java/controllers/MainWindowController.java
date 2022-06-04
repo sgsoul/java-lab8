@@ -93,6 +93,8 @@ public class MainWindowController {
     private Button removeButton;
     @FXML
     private Button clearButton;
+    @FXML
+    private Button exitButton;
 
     @FXML
     private Button refreshButton;
@@ -149,8 +151,8 @@ public class MainWindowController {
         randomGenerator = new Random(RANDOM_SEED);
         localeMap = new HashMap<>();
         localeMap.put("English", new Locale("en", "IE"));
-        localeMap.put("Русский", new Locale("ru", "RU"));
-        localeMap.put("Српски", new Locale("sr", "RS"));
+        localeMap.put("\u0420\u0443\u0441\u0441\u043a\u0438\u0439", new Locale("ru", "RU"));
+        localeMap.put("\u0421\u0440\u043f\u0441\u043a\u0438", new Locale("sr", "RS"));
         localeMap.put("Polski", new Locale("pl", "PL"));
         languageComboBox.setItems(FXCollections.observableArrayList(localeMap.keySet()));
     }
@@ -274,6 +276,7 @@ public class MainWindowController {
         tableTab.textProperty().bind(resourceFactory.getStringBinding("TableTab"));
         canvasTab.textProperty().bind(resourceFactory.getStringBinding("CanvasTab"));
 
+        //exitButton.textProperty().bind(resourceFactory.getStringBinding("ExitButton"));
         addButton.textProperty().bind(resourceFactory.getStringBinding("AddButton"));
         updateButton.textProperty().bind(resourceFactory.getStringBinding("UpdateButton"));
         removeButton.textProperty().bind(resourceFactory.getStringBinding("RemoveButton"));
